@@ -1,27 +1,54 @@
-# Angularapp
+# MyApp
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 15.0.0.
 
-## Development server
+# ReadMe File -- Angular
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+Pour executer cette application sur votre machine, vous devez d'abord avoir
+- Docker(engine) installé
+- Une connexion si vous n'avez pas les images de node et nginx
 
-## Code scaffolding
+## Ce qui va se passer dans ce Dockerfile 
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+```
 
-## Build
+Pour la partie NODE
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+```
 
-## Running unit tests
+###### Création à partir de l'Image de NODE
+* FROM node:latest AS builder
+###### Définition de l'espace de travail de Node
+* WORKDIR /app
+###### Copie du contenu courant vers l'espace de travail
+* COPY . .
+###### Installation des packages et construction de l'application
+* RUN npm install && npm run build
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+```
 
-## Running end-to-end tests
+Pour la partie NGINX
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+```
 
-## Further help
+###### Création à partir de l'Image de NGINX
+* FROM nginx:alpine
+###### Définition de l'espace de travail de Nginx
+* WORKDIR /usr/share/nginx/html
+###### Suppression des fichiers statics par defaut de Nginx
+* RUN rm -rf ./*
+###### Copie du contenu de "builder" vers l'espace de travail de Nginx
+* COPY --from=builder /app/dist/my-app .
+###### Exécution de Nginx globallement et Arret de daemon
+* ENTRYPOINT ["nginx", "-g", "daemon off;"]
+```
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+C'est terminé, et : 
+Pour executer ce fichier pour Docker: docker build <root-app> -t tag_name
+Création du conteneur : docker run --rm --name my-app -p 8080:80 my-app-image
+
+```sh
+npm install --production
+NODE_ENV=production node app
+```
+
